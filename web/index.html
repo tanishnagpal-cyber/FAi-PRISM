@@ -370,20 +370,36 @@
   let currentFile=null;
   function sid(){try{let s=localStorage.getItem('prism_sid');if(!s){s=(self.crypto&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/gi,'');localStorage.setItem('prism_sid',s);}return s;}catch(e){return 'default';}}
 
+  // clear any leftover overlay state (fixes the "second run errors until refresh" bfcache issue)
+  function resetOverlays(){const p=document.getElementById('proc');if(p)p.classList.remove('on');const q=document.getElementById('periods');if(q)q.classList.remove('on');}
+  window.addEventListener('pageshow',function(e){if(e.persisted)location.reload();});   // fresh state when restored from back/forward
+
+  // parse a response, turning HTTP/JSON errors into a clear message
+  function readJson(r){ if(r.ok) return r.json();
+    return r.text().then(function(t){let m='';try{m=(JSON.parse(t)||{}).error||'';}catch(_){}
+      throw new Error(m || ('The server returned an error ('+r.status+').'));}); }
+  function friendly(e,fallback){const m=(e&&e.message)||'';
+    if(/Failed to fetch|NetworkError|Load failed|timed out/i.test(m))
+      return 'Could not reach the server - it may be waking up or busy. Please wait a few seconds and try again.';
+    return m||fallback; }
+
   // step 1: upload → read timelines → show the period picker
   function handle(f){
     currentFile=f;
+    try{document.getElementById('file').value='';}catch(_){}   // allow re-selecting the same file
+    resetOverlays();                                            // start each run from a clean state
     if(location.protocol==='file:'){showPeriods(DEMO_TL);return;}
     showPeriods(null);
     const fd=new FormData();fd.append('file',f);fd.append('sid',sid());
-    fetch('/api/upload',{method:'POST',body:fd}).then(r=>r.json())
-      .then(d=>{d.ok?showPeriods(d.timelines):periodsError(d.error||'Could not read the report');})
-      .catch(()=>periodsError('Upload failed - is the server running?'));
+    fetch('/api/upload',{method:'POST',body:fd}).then(readJson)
+      .then(d=>{d.ok?showPeriods(d.timelines):periodsError(d.error||'Could not read the report.');})
+      .catch(e=>periodsError(friendly(e,'We could not read that file. Please check it is the .xlsx report and try again.')));
   }
 
   const periods=document.getElementById('periods'),prows=document.getElementById('prows'),pwarn=document.getElementById('pwarn');
   const fmtWin=w=>(w.start||'?')+' → '+(w.end||'?');
   function showPeriods(tl){
+    const proc=document.getElementById('proc');if(proc)proc.classList.remove('on');
     periods.classList.add('on');pwarn.textContent='';
     const btn=document.getElementById('panalyse');
     if(!tl){prows.innerHTML='<div class="prow"><div class="pn">Reading report…</div></div>';btn.disabled=true;return;}
@@ -431,8 +447,8 @@
       r.onclick=()=>location.reload();box.appendChild(r);};
     if(location.protocol==='file:'){setTimeout(done,n*step+300);return;}
     fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keep:keep,sid:sid()})})
-      .then(r=>r.json()).then(d=>{d.ok?done():fail(d.error||'Analysis failed');})
-      .catch(()=>fail('Analysis failed - is the server running?'));
+      .then(readJson).then(d=>{d.ok?done():fail(d.error||'Analysis failed.');})
+      .catch(e=>fail(friendly(e,'Analysis failed. Please go back and try again.')));
   }
 </script>
 </body>
