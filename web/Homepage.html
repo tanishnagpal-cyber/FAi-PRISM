@@ -402,8 +402,11 @@
     const proc=document.getElementById('proc');if(proc)proc.classList.remove('on');
     periods.classList.add('on');pwarn.textContent='';
     const btn=document.getElementById('panalyse');
-    if(!tl){prows.innerHTML='<div class="prow"><div class="pn">Reading report...</div></div>';btn.disabled=true;return;}
-    btn.disabled=false;
+    if(!tl){prows.innerHTML='<div class="prow" style="justify-content:center;gap:12px">'
+        +'<span style="width:17px;height:17px;border-radius:50%;border:2px solid rgba(110,168,255,.25);border-top-color:#6ea8ff;display:inline-block;animation:spin .8s linear infinite"></span>'
+        +'<div class="pn" style="font-weight:600;color:#aeb8cf">Reading your report...</div></div>';
+      btn.disabled=true;btn.textContent='Analyse →';return;}
+    btn.disabled=false;btn.textContent='Analyse →';
     let h='<div class="prow base"><span class="tick">✓</span><div><div class="pn">Base - '+
       (tl.base?tl.base.label:'Base Period')+'</div><div class="pd">'+(tl.base?fmtWin(tl.base):'')+'</div></div><span class="lock">Always</span></div>';
     REFKEYS.forEach(k=>{if(!tl[k])return;const on=(k==='ref1');
@@ -421,13 +424,16 @@
   document.getElementById('panalyse').onclick=()=>{
     const keep=collectKeep();
     if(!keep.length){pwarn.textContent='Pick at least one reference period to compare against.';return;}
-    periods.classList.remove('on');runProcessing(keep);
+    const b=document.getElementById('panalyse');b.disabled=true;b.textContent='Analysing...';
+    runProcessing(keep);              // show the processing overlay first (no dead gap)...
+    periods.classList.remove('on');   // ...then dismiss the picker underneath
   };
 
   // step 2: analyse with the chosen references → processing screen → analysis page
   const PSTEPS=['Reading your report','Validating outlets','Computing lift vs control','Refracting every segment','Assembling insights'];
   function runProcessing(keep){
     const proc=document.getElementById('proc');proc.classList.add('on');
+    document.querySelector('.ptitle').textContent='Refracting your report...';
     document.getElementById('pfname').textContent=currentFile?('“'+currentFile.name+'”'):'';
     const box=document.getElementById('psteps');box.innerHTML='';
     const bar=document.getElementById('pbarfill');
