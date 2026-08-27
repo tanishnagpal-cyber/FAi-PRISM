@@ -123,9 +123,9 @@
     <div class="split">
       <div class="sticky reveal">
         <div class="eyebrow">What PRISM found</div>
-        <h2>Booked outlets clearly beat the ones that ignored the recommendation.</h2>
-        <p>Control-adjusted figures - booked outlets measured against comparable non-booking outlets, so
-          market swings are netted out. The engine works where it's actioned; the real gap is adoption.</p>
+        <h2 id="found-h">How booked outlets compared with the ones that didn't act.</h2>
+        <p id="found-p">Control-adjusted figures - booked outlets measured against comparable non-booking
+          outlets, so market swings are netted out.</p>
       </div>
       <div class="stack">
         <div class="icard reveal"><div class="k">LPC lift (booked vs not)</div><div class="v up" id="v-lpc">+36.6%</div><div class="d">Lines per call grew far ahead of the non-booking control group.</div></div>
@@ -184,6 +184,27 @@
         if(el&&v&&v!=='-')el.textContent=(plus&&!String(v).startsWith('-')?'+':'')+v;};
       set('v-lpc',s.lpc_lift,true);set('v-value',s.value_lift,true);
       set('v-inc',s.incremental,false);set('v-comp',s.compliance,false);
+
+      // dynamic verdict: the "What PRISM found" text must reflect the ACTUAL lift
+      const lift=parseFloat(s.lpc_lift);   // percent number (e.g. 36.6 or -16.6), or NaN
+      if(!isNaN(lift)){
+        let h,p;
+        if(lift>=8){
+          h='Booked outlets clearly outperformed the ones that ignored the recommendation.';
+          p="Control-adjusted figures - booked outlets measured against comparable non-booking outlets, so market swings are netted out. The recommendation is working where it's actioned; the opportunity now is wider adoption.";
+        }else if(lift>2){
+          h='Booked outlets edged ahead of comparable non-booking outlets.';
+          p='Control-adjusted figures - a real but modest advantage for outlets that acted on the recommendation, with clear room to grow as adoption widens.';
+        }else if(lift>=-2){
+          h='Booked and non-booking outlets performed broadly in line this cycle.';
+          p='Control-adjusted figures show no clear separation yet - worth watching the trend and lifting adoption before drawing firm conclusions.';
+        }else{
+          h='Booked outlets did not outperform the comparison group this cycle.';
+          p="Control-adjusted figures suggest the recommendations didn't lift outcomes for the outlets that acted on them - a signal to review the logic for the weaker segments.";
+        }
+        const he=document.getElementById('found-h'),pe=document.getElementById('found-p');
+        if(he)he.textContent=h; if(pe)pe.textContent=p;
+      }
     }).catch(()=>{});
   }
 
