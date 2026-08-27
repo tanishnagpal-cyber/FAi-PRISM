@@ -87,12 +87,23 @@
   .inside{margin-top:84px}
   .inside .lbl{font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:600}
   .inside h2{font-family:var(--display);font-size:clamp(24px,3.2vw,36px);font-weight:600;margin-top:12px;letter-spacing:-.02em}
-  .tabs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin-top:26px}
-  .tab{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;transition:transform .3s var(--elastic),border-color .3s}
-  .tab:hover{transform:translateY(-4px);border-color:rgba(110,168,255,.4)}
-  .tab .n{font-family:var(--display);color:var(--faint);font-size:13px;font-weight:600}
-  .tab .t{font-weight:600;margin-top:8px}
-  .tab .s{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.45}
+  /* the 8 views as a rotating 3D wheel - a drum of cards you can drag to spin */
+  .wheelwrap{margin-top:30px;position:relative}
+  .wheelstage{height:300px;perspective:1500px;position:relative;cursor:grab;touch-action:pan-y;overflow:hidden}
+  .wheelstage.grabbing{cursor:grabbing}
+  .wheel{position:absolute;left:50%;top:50%;width:250px;height:168px;margin:-84px 0 0 -125px;transform-style:preserve-3d}
+  .wcard{position:absolute;left:0;top:0;width:250px;height:168px;box-sizing:border-box;
+    background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;
+    backdrop-filter:blur(10px);box-shadow:0 24px 60px rgba(0,0,0,.5);
+    display:flex;flex-direction:column;will-change:opacity;transition:border-color .35s,box-shadow .35s}
+  .wcard.front{border-color:rgba(110,168,255,.6);box-shadow:0 34px 90px rgba(47,95,224,.35)}
+  .wcard .n{font-family:var(--display);color:var(--faint);font-size:13px;font-weight:600}
+  .wcard .t{font-weight:600;margin-top:10px;font-size:16px;letter-spacing:-.01em}
+  .wcard .s{color:var(--muted);font-size:12.5px;margin-top:9px;line-height:1.5}
+  .wheeldots{display:flex;gap:8px;justify-content:center;margin-top:8px}
+  .wheeldots i{width:7px;height:7px;border-radius:50%;background:var(--line);cursor:pointer;transition:background .3s,transform .3s}
+  .wheeldots i.on{background:var(--primary,#2f5fe0);transform:scale(1.45)}
+  .wheelhint{text-align:center;color:var(--muted);font-size:11.5px;margin-top:12px;letter-spacing:.03em}
 
   .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s var(--elastic),transform .7s var(--elastic)}
   .reveal.in{opacity:1;transform:none}
@@ -153,16 +164,22 @@
 
     <div class="inside reveal">
       <div class="lbl">Inside the file</div>
-      <h2>Eleven views, one refraction.</h2>
-      <div class="tabs">
-        <div class="tab reveal"><div class="n">01</div><div class="t">Overview</div><div class="s">Headline impact, lift, incremental value, data quality.</div></div>
-        <div class="tab reveal"><div class="n">02</div><div class="t">By Region</div><div class="s">Every state - growth, lift, contribution, headroom.</div></div>
-        <div class="tab reveal"><div class="n">03</div><div class="t">Zone / Class / Channel</div><div class="s">Impact across each cut of the business.</div></div>
-        <div class="tab reveal"><div class="n">04</div><div class="t">Tag-wise</div><div class="s">Upsell · Conventional · New · Focussed - conversion & mix.</div></div>
-        <div class="tab reveal"><div class="n">05</div><div class="t">Tag × Segment</div><div class="s">Where each tag converts best and worst.</div></div>
-        <div class="tab reveal"><div class="n">06</div><div class="t">Trend</div><div class="s">Base vs earlier periods; short windows flagged.</div></div>
-        <div class="tab reveal"><div class="n">07</div><div class="t">Rankings</div><div class="s">Best/weakest by lift, value, growth, headroom.</div></div>
-        <div class="tab reveal"><div class="n">08</div><div class="t">Data Quality</div><div class="s">Usable counts - facts, your judgement.</div></div>
+      <h2>Eight views, one refraction.</h2>
+      <div class="wheelwrap reveal">
+        <div class="wheelstage" id="wheelstage">
+          <div class="wheel" id="wheel">
+            <div class="wcard"><div class="n">01</div><div class="t">Overview</div><div class="s">Headline impact, lift, incremental value, data quality.</div></div>
+            <div class="wcard"><div class="n">02</div><div class="t">By Region</div><div class="s">Every state - growth, lift, contribution, headroom.</div></div>
+            <div class="wcard"><div class="n">03</div><div class="t">Zone / Class / Channel</div><div class="s">Impact across each cut of the business.</div></div>
+            <div class="wcard"><div class="n">04</div><div class="t">Tag-wise</div><div class="s">Upsell · Conventional · New · Focussed - conversion & mix.</div></div>
+            <div class="wcard"><div class="n">05</div><div class="t">Tag × Segment</div><div class="s">Where each tag converts best and worst.</div></div>
+            <div class="wcard"><div class="n">06</div><div class="t">Trend</div><div class="s">Base vs earlier periods; short windows flagged.</div></div>
+            <div class="wcard"><div class="n">07</div><div class="t">Rankings</div><div class="s">Best/weakest by lift, value, growth, headroom.</div></div>
+            <div class="wcard"><div class="n">08</div><div class="t">Data Quality</div><div class="s">Usable counts - facts, your judgement.</div></div>
+          </div>
+        </div>
+        <div class="wheeldots" id="wheeldots"></div>
+        <div class="wheelhint">Drag to spin  ·  hover to pause</div>
       </div>
     </div>
   </div>
@@ -225,6 +242,64 @@
       cx.shadowColor=p.c;cx.shadowBlur=8*DPR;cx.fill();}
     cx.restore();requestAnimationFrame(tick);}
   requestAnimationFrame(tick);
+
+  /* ---- the 8 views as a rotating 3D wheel (drag to spin, hover to pause) ---- */
+  (function(){
+    const stage=document.getElementById('wheelstage'), wheel=document.getElementById('wheel');
+    if(!stage||!wheel) return;
+    const cards=[...wheel.querySelectorAll('.wcard')];
+    const N=cards.length, STEP=360/N, R=340;                 // R: drum radius in px
+    cards.forEach((c,i)=>{ c.dataset.base=i*STEP; c.style.transform='rotateY('+(i*STEP)+'deg) translateZ('+R+'px)'; });
+
+    // navigation dots
+    const dotwrap=document.getElementById('wheeldots');
+    const dots=cards.map((_,i)=>{const d=document.createElement('i');d.onclick=()=>goTo(i);dotwrap.appendChild(d);return d;});
+
+    let angle=0, target=0, auto=true, dragging=false, lastX=0, moved=0;
+    let running=false, onScreen=false;                       // resource gate: animate only when visible
+    function goTo(i){ const b=+cards[i].dataset.base; target = -b + Math.round((target+b)/360)*360; kick(); }
+
+    function frame(){
+      if(auto && !dragging) target -= 0.16;                  // gentle idle spin
+      angle += (target-angle)*0.10;                          // eased follow
+      wheel.style.transform='rotateY('+angle+'deg)';
+      let best=0, bestRel=1e9;
+      cards.forEach((c,i)=>{
+        const a=((angle + +c.dataset.base)%360+360)%360;     // 0 => facing the viewer
+        const rel=Math.min(a,360-a);                         // 0 (front) .. 180 (back)
+        const k=Math.cos(rel*Math.PI/180);                   // 1 front .. -1 back
+        c.style.opacity=(0.30+0.70*(k*0.5+0.5)).toFixed(3);  // fade the ones turning away
+        c.style.zIndex=String(200+Math.round(k*100));
+        if(rel<bestRel){bestRel=rel;best=i;}
+      });
+      cards.forEach((c,i)=>c.classList.toggle('front',i===best));
+      dots.forEach((d,i)=>d.classList.toggle('on',i===best));
+      // stop the loop when there is nothing left to do (idle-paused AND settled) - saves CPU
+      const settled=Math.abs(target-angle)<0.05;
+      if(onScreen && !document.hidden && (auto || dragging || !settled)){ requestAnimationFrame(frame); }
+      else { running=false; }
+    }
+    function kick(){ if(!running){ running=true; requestAnimationFrame(frame); } }
+
+    // only run while the wheel is actually on screen and the tab is visible
+    const vio=new IntersectionObserver((es)=>{ onScreen=es[0].isIntersecting; if(onScreen) kick(); },{threshold:.05});
+    vio.observe(stage);
+    document.addEventListener('visibilitychange',()=>{ if(!document.hidden) kick(); });
+
+    // hover pauses the idle spin so the front card is readable
+    stage.addEventListener('mouseenter',()=>{ if(!dragging) auto=false; });
+    stage.addEventListener('mouseleave',()=>{ if(!dragging){ auto=true; kick(); } });
+
+    // drag / swipe to spin
+    function down(x){ dragging=true; auto=false; lastX=x; moved=0; stage.classList.add('grabbing'); kick(); }
+    function move(x){ if(!dragging) return; const dx=x-lastX; lastX=x; moved+=Math.abs(dx); target += dx*0.45; kick(); }
+    function up(){ if(!dragging) return; dragging=false; stage.classList.remove('grabbing');
+      if(moved<4){ target = Math.round(target/STEP)*STEP; }   // a click (not a drag) snaps to nearest
+      auto = !stage.matches(':hover'); kick(); }
+    stage.addEventListener('pointerdown',e=>{down(e.clientX);});
+    window.addEventListener('pointermove',e=>move(e.clientX));
+    window.addEventListener('pointerup',up);
+  })();
 </script>
 </body>
 </html>
