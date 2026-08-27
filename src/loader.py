@@ -163,7 +163,8 @@ def read_report(path, keep=None):
     """keep = ordered list of reference keys to USE (e.g. ['ref1'] or ['ref2','ref1']).
     The chosen references are remapped into the ref1/ref2/ref3 slots in order, so
     the first chosen becomes the primary comparison and unchosen refs are ignored.
-    keep=None uses all references as-is. (Read via calamine for speed.)
+    keep=None uses all references as-is. Read via calamine + STREAMED row-by-row
+    (iter_rows) so memory stays flat even on a small hosting instance.
     """
     cwb = CalamineWorkbook.from_path(path)
     sm = _sheetmap(cwb)
@@ -172,11 +173,12 @@ def read_report(path, keep=None):
                 "problems": [f"Not the expected raw PR report. Sheets: {cwb.sheet_names}"]}
 
     timelines = parse_timelines(cwb.get_sheet_by_name(sm["timelines"]).to_python())
-    data = cwb.get_sheet_by_name(sm["pr impact report"]).to_python()
-    if not data:
+    it = iter(cwb.get_sheet_by_name(sm["pr impact report"]).iter_rows())
+    try:
+        header = next(it)
+    except StopIteration:
         return {"format_ok": False, "problems": ["The report sheet is empty."]}
 
-    header = data[0]
     cmap = resolve_headers(header)
     missing = missing_required(cmap)
     if missing:
@@ -218,7 +220,7 @@ def read_report(path, keep=None):
 
     agg = {d: {} for d in DIMENSIONS}
     total = 0
-    for row in data[1:]:
+    for row in it:
         if not row or (row[0] in (None, "") and all(c in (None, "") for c in row)):
             continue
         total += 1
@@ -240,7 +242,6 @@ def read_report(path, keep=None):
                 acc = bucket[split] = _new_acc()
             _add(acc, vals)
 
-    del data
     return {"format_ok": True, "problems": [], "timelines": timelines,
             "total_rows": total, "aggregates": agg}
 
