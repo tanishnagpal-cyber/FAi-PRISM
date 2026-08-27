@@ -152,7 +152,7 @@
   };
   const DESC={
     'Impact proof':'Lift of booked outlets vs comparable non-booking ones - LPC, value and orders.',
-    'Value contribution':'How much booked value each tag (New Product, Upsell…) contributes.',
+    'Value contribution':'How much booked value each tag (New Product, Upsell...) contributes.',
     'Incremental ₹':'Estimated rupees attributable to PR, measured against the control group.',
     'Adoption':'Compliance and penetration - how widely recommendations are actually booked.',
     'Regional breakdown':'Best and weakest areas by lift, size-weighted.',
@@ -242,11 +242,26 @@
   }
   function shot(msg){toast.textContent=msg;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),3200);}
 
-  function getOutputUrl(cb){
-    if(location.protocol==='file:'){cb(resultFile());return;}
+  function getOutputUrl(cb, err){
+    if(location.protocol==='file:'){cb(resultFile());return;}   // demo mode: static preview
     const payload={client:answers.client,scope:answers.scope,value:answers.value,include:answers.include,format:answers.format,sid:sid()};
     fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-      .then(r=>r.json()).then(d=>cb(d&&d.ok?d.url:resultFile())).catch(()=>cb(resultFile()));
+      .then(function(r){ if(r.ok) return r.json();
+        return r.text().then(function(t){let m='';try{m=(JSON.parse(t)||{}).error||'';}catch(_){}
+          throw new Error(m || ('The server returned an error ('+r.status+').'));}); })
+      .then(function(d){ if(d&&d.ok) cb(d.url);
+        else err(d&&d.error || 'We could not build the report. Please try again.'); })
+      .catch(function(e){ var m=(e&&e.message)||'';
+        if(/Failed to fetch|NetworkError|Load failed|timed out/i.test(m))
+          m='Could not reach the server - it may be busy or waking up. Please wait a moment and try again.';
+        err(m || 'We could not build the report. Please try again.'); });
+  }
+  function showGenError(msg){
+    const d=document.createElement('div');d.className='result';
+    d.innerHTML='<div class="rt"><h3>Something went wrong</h3></div>'+
+      '<div class="meta">'+msg+'</div>'+
+      '<div class="dlrow"><span class="restart" onclick="location.reload()">↺ Start over</span></div>';
+    thread.appendChild(d);scroll();
   }
   function buildResult(file){
     const s=answers.scope||[];
@@ -268,8 +283,9 @@
   }
   function finish(){
     backBtn.classList.remove('show');
-    think(()=>{addAgent('Refracting your data and assembling the recommendation…',null,false);
-      getOutputUrl(file=>{think(()=>buildResult(file));});
+    think(()=>{addAgent('Refracting your data and assembling the recommendation...',null,false);
+      getOutputUrl(function(file){think(()=>buildResult(file));},
+                   function(msg){think(()=>showGenError(msg));});
     });
   }
   askCursor(false);

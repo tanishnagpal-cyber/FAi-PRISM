@@ -129,8 +129,11 @@ def analyze():
         return jsonify(ok=False, error="No uploaded report found - please upload again."), 400
     try:
         fp = run_analysis(path, out_dir=odir, keep=keep)     # the real ~10s compute
-    except Exception as e:
-        return jsonify(ok=False, error=str(e)), 400
+    except ValueError as e:
+        return jsonify(ok=False, error=str(e)), 400          # e.g. wrong format / missing columns
+    except Exception:
+        traceback.print_exc()
+        return jsonify(ok=False, error="We could not analyse that file. Please check it is the PR Impact report and try again."), 400
     return jsonify(ok=True, summary=_summary(fp))
 
 
@@ -157,9 +160,11 @@ def generate():
     _, odir = _dirs(_sid(answers.get("sid")))
     try:
         path = assemble.build_report(answers, out_dir=odir)
-    except Exception as e:
+    except FileNotFoundError:
+        return jsonify(ok=False, error="No analysis found for this session. Please upload and analyse a report first."), 400
+    except Exception:
         traceback.print_exc()
-        return jsonify(ok=False, error=str(e)), 400
+        return jsonify(ok=False, error="We could not build the report. Please try again."), 400
     rel = os.path.relpath(path, OUT).replace("\\", "/")
     return jsonify(ok=True, url="/output/" + rel)
 

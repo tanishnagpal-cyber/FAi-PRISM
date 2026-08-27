@@ -291,14 +291,14 @@
       <div class="core">
         <svg width="52" height="52" viewBox="0 0 24 24"><polygon points="12,3 21,18 3,18" fill="none" stroke="#6ea8ff" stroke-width="1.4"/><line x1="12" y1="12" x2="22" y2="7" stroke="#8b5cf6" stroke-width="1.2"/><line x1="12" y1="12" x2="22" y2="12" stroke="#22d3ee" stroke-width="1.2"/><line x1="12" y1="12" x2="22" y2="17" stroke="#ec4899" stroke-width="1.2"/></svg>
       </div>
-      <div class="ptitle">Refracting your report…</div>
+      <div class="ptitle">Refracting your report...</div>
       <div class="psub" id="pfname">Reading the workbook</div>
       <div class="psteps" id="psteps"></div>
       <div class="pbar"><i id="pbarfill"></i></div>
     </div>
   </div>
 
-  <div id="toast"><div class="spin"></div><div><b id="toast-t">Report received</b><div class="small" id="toast-s">Refracting your data…</div></div></div>
+  <div id="toast"><div class="spin"></div><div><b id="toast-t">Report received</b><div class="small" id="toast-s">Refracting your data...</div></div></div>
 
 <script>
   const intro=document.getElementById('intro'), app=document.getElementById('app');
@@ -402,7 +402,7 @@
     const proc=document.getElementById('proc');if(proc)proc.classList.remove('on');
     periods.classList.add('on');pwarn.textContent='';
     const btn=document.getElementById('panalyse');
-    if(!tl){prows.innerHTML='<div class="prow"><div class="pn">Reading report…</div></div>';btn.disabled=true;return;}
+    if(!tl){prows.innerHTML='<div class="prow"><div class="pn">Reading report...</div></div>';btn.disabled=true;return;}
     btn.disabled=false;
     let h='<div class="prow base"><span class="tick">✓</span><div><div class="pn">Base - '+
       (tl.base?tl.base.label:'Base Period')+'</div><div class="pd">'+(tl.base?fmtWin(tl.base):'')+'</div></div><span class="lock">Always</span></div>';
