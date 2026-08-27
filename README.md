@@ -10,7 +10,7 @@ report (deterministic, no AI in the numbers).
 ```bash
 py -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe src\app.py
+.venv\Scripts\python.exe app.py
 # open http://127.0.0.1:5000
 ```
 
