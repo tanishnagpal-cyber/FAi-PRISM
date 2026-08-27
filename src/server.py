@@ -59,7 +59,7 @@ def _dirs(sid):
 # ---------------------------------------------------------------- pages
 @app.get("/")
 def home():
-    return send_from_directory(WEB, "index.html")
+    return send_from_directory(WEB, "Homepage.html")
 
 
 @app.get("/<page>.html")

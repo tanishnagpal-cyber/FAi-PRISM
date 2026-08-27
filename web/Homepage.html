@@ -234,7 +234,7 @@
         <span class="txt"><span class="fa-t">FieldAssist</span> <span class="pr-t">PRISM</span></span>
       </div>
       <div class="navpill">
-        <a class="active" href="index.html">Upload</a><a href="analysis.html">Analysis</a><a href="recommendation.html">Recommendation</a>
+        <a class="active" href="Homepage.html">Upload</a><a href="Analysis.html">Analysis</a><a href="Recommendation.html">Recommendation</a>
       </div>
     </div>
 
@@ -439,7 +439,7 @@
       if(i<n-1)setTimeout(()=>{el.classList.add('done');el.querySelector('.ic').textContent='✓';},i*step+step*0.72);
     });
     const done=()=>{const last=els[n-1];last.classList.add('done');last.querySelector('.ic').textContent='✓';
-      bar.style.width='100%';setTimeout(()=>{window.location.href='analysis.html';},550);};
+      bar.style.width='100%';setTimeout(()=>{window.location.href='Analysis.html';},550);};
     const fail=(msg)=>{document.querySelector('.ptitle').textContent='Could not analyse that report';
       document.getElementById('pfname').textContent=msg;
       const r=document.createElement('div');r.className='pstep show';r.style.cursor='pointer';
