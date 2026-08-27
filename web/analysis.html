@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRISM · Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  @property --ang{syntax:'<angle>';initial-value:0deg;inherits:false}
+  :root{--bg:#05060b;--ink:#eef2fb;--muted:#8a93a8;--faint:#5c6479;--blue:#3b82f6;--blue2:#6ea8ff;
+    --violet:#8b5cf6;--cyan:#22d3ee;--pink:#ec4899;--line:rgba(120,160,255,.16);--card:rgba(255,255,255,.04);
+    --display:'Space Grotesk','Segoe UI',system-ui,sans-serif;--body:'Inter','Segoe UI',system-ui,Arial,sans-serif;
+    --elastic:cubic-bezier(.22,1.4,.35,1)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden;letter-spacing:.01em}
+  ::selection{background:rgba(110,168,255,.28)}
+  .aurora{position:fixed;inset:-20% -10%;z-index:0;filter:blur(100px);opacity:.42;pointer-events:none}
+  .aurora span{position:absolute;border-radius:50%;mix-blend-mode:screen;animation:float 22s ease-in-out infinite}
+  .a1{width:44vw;height:44vw;left:-8%;top:-10%;background:radial-gradient(circle,#1e40ff,transparent 62%)}
+  .a2{width:40vw;height:40vw;right:-6%;top:20%;background:radial-gradient(circle,#7c3aed,transparent 62%);animation-delay:-6s}
+  .a3{width:42vw;height:42vw;left:30%;bottom:-26%;background:radial-gradient(circle,#ec4899,transparent 64%);animation-delay:-11s;opacity:.6}
+  @keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(4%,3%) scale(1.07)}66%{transform:translate(-3%,-2%) scale(.96)}}
+  .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.045;background-image:radial-gradient(rgba(255,255,255,.7) .5px,transparent .5px);background-size:3px 3px}
+
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:18px 30px;backdrop-filter:blur(9px)}
+  .logo{display:flex;align-items:center;gap:11px}
+  .logo .mark{width:26px;height:26px;display:grid;place-items:center;filter:drop-shadow(0 0 9px rgba(96,165,255,.6))}
+  .logo .txt{font-family:var(--display);font-weight:700;font-size:16px}
+  .logo .fa-t{color:#fff}.logo .pr-t{color:var(--blue2)}
+  .navpill{display:flex;gap:4px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:30px;padding:5px}
+  .navpill a{color:var(--muted);text-decoration:none;font-size:13px;padding:7px 16px;border-radius:24px;transition:.25s;font-weight:500}
+  .navpill a.active,.navpill a:hover{color:#fff;background:rgba(59,130,246,.16)}
+
+  .wrap{position:relative;z-index:5;max-width:1080px;margin:0 auto;padding:130px 30px 90px}
+
+  /* hero (centered) with particle synthesizer behind */
+  .hero{position:relative;text-align:center;padding-bottom:10px}
+  #synth{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:680px;height:360px;max-width:100%;z-index:-1;opacity:.9}
+  .status{display:inline-flex;align-items:center;gap:9px;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;
+    color:#34d399;border:1px solid rgba(52,211,153,.3);border-radius:30px;padding:7px 15px;background:rgba(52,211,153,.07);font-weight:600}
+  .status .tick{width:16px;height:16px;border-radius:50%;background:#34d399;display:grid;place-items:center;color:#05170f;font-size:10px}
+  h1{font-family:var(--display);font-size:clamp(38px,6.2vw,72px);font-weight:600;line-height:1.03;margin:22px 0 0;letter-spacing:-.025em}
+  h1 .spec{background:linear-gradient(100deg,#a78bfa,#60a5ff,#22d3ee,#f472b6);background-size:220%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sh 8s linear infinite}
+  @keyframes sh{to{background-position:220% 0}}
+  .sub{color:#a3acc1;font-size:clamp(15px,2.1vw,18px);max-width:600px;margin:20px auto 0;line-height:1.65}
+
+  /* sticky-text split */
+  .split{display:grid;grid-template-columns:.82fr 1.18fr;gap:48px;margin-top:80px;align-items:start}
+  .sticky{position:sticky;top:130px}
+  .sticky .eyebrow{font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue2);font-weight:600}
+  .sticky h2{font-family:var(--display);font-size:clamp(25px,3.2vw,38px);font-weight:600;margin-top:14px;line-height:1.14;letter-spacing:-.02em}
+  .sticky p{color:var(--muted);margin-top:16px;line-height:1.62;font-size:14.5px}
+  .stack{display:flex;flex-direction:column;gap:16px}
+  .icard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 24px;backdrop-filter:blur(12px);
+    box-shadow:0 18px 50px rgba(0,0,0,.45);transition:transform .35s var(--elastic),border-color .35s}
+  .icard:hover{transform:translateY(-4px);border-color:rgba(110,168,255,.4)}
+  .icard .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .icard .v{font-family:var(--display);font-size:40px;font-weight:700;margin-top:6px;letter-spacing:-.01em}
+  .icard .v.up{color:#34d399}.icard .v.b{color:var(--blue2)}
+  .icard .d{color:var(--muted);font-size:13px;margin-top:6px;line-height:1.5}
+
+  /* Apple-Intelligence fluid bezel glow */
+  .bezel{position:relative;border-radius:24px}
+  .bezel::before{content:"";position:absolute;inset:-1.5px;border-radius:inherit;padding:1.5px;
+    background:conic-gradient(from var(--ang),#2dd4bf,#8b5cf6,#f472b6,#f59e0b,#22d3ee,#2dd4bf);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+    filter:blur(2px);opacity:.9;animation:angspin 6s linear infinite}
+  .bezel::after{content:"";position:absolute;inset:-14px;border-radius:32px;z-index:-1;filter:blur(26px);opacity:.35;
+    background:conic-gradient(from var(--ang),#2dd4bf,#8b5cf6,#f472b6,#f59e0b,#22d3ee,#2dd4bf);animation:angspin 6s linear infinite}
+  @keyframes angspin{to{--ang:360deg}}
+
+  .glass{position:relative;margin-top:78px;border-radius:24px;padding:38px 40px;overflow:hidden;
+    background:linear-gradient(180deg,rgba(18,22,34,.9),rgba(10,13,21,.92));backdrop-filter:blur(16px)}
+  .glass .badge{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--violet);font-weight:700}
+  .glass h3{font-family:var(--display);font-size:clamp(22px,3vw,30px);font-weight:600;margin-top:12px;letter-spacing:-.01em}
+  .glass p{color:#aeb7cb;margin-top:12px;line-height:1.65;max-width:640px;font-size:15px}
+  .btnrow{display:flex;gap:14px;flex-wrap:wrap;margin-top:24px}
+  .btn{display:inline-flex;align-items:center;gap:10px;font-weight:600;font-size:14px;padding:14px 22px;border-radius:14px;text-decoration:none;cursor:pointer;transition:transform .3s var(--elastic),box-shadow .3s}
+  .btn.primary{background:linear-gradient(100deg,#3b82f6,#6366f1);color:#fff;box-shadow:0 10px 30px rgba(59,130,246,.4)}
+  .btn.primary:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 16px 42px rgba(59,130,246,.55)}
+  .btn.ghost{border:1px solid var(--line);color:#dbe6ff;background:rgba(255,255,255,.02)}
+  .btn.ghost:hover{transform:translateY(-3px);border-color:var(--blue2)}
+
+  .inside{margin-top:84px}
+  .inside .lbl{font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .inside h2{font-family:var(--display);font-size:clamp(24px,3.2vw,36px);font-weight:600;margin-top:12px;letter-spacing:-.02em}
+  .tabs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin-top:26px}
+  .tab{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;transition:transform .3s var(--elastic),border-color .3s}
+  .tab:hover{transform:translateY(-4px);border-color:rgba(110,168,255,.4)}
+  .tab .n{font-family:var(--display);color:var(--faint);font-size:13px;font-weight:600}
+  .tab .t{font-weight:600;margin-top:8px}
+  .tab .s{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.45}
+
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s var(--elastic),transform .7s var(--elastic)}
+  .reveal.in{opacity:1;transform:none}
+  @media(max-width:820px){.split{grid-template-columns:1fr}.sticky{position:static}}
+</style>
+</head>
+<body>
+  <div class="aurora"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
+  <div class="grain"></div>
+
+  <div class="topbar">
+    <div class="logo">
+      <span class="mark"><svg width="24" height="24" viewBox="0 0 24 24"><polygon points="12,3 21,18 3,18" fill="none" stroke="#6ea8ff" stroke-width="1.6"/><line x1="12" y1="12" x2="22" y2="7" stroke="#8b5cf6" stroke-width="1.4"/><line x1="12" y1="12" x2="22" y2="12" stroke="#22d3ee" stroke-width="1.4"/><line x1="12" y1="12" x2="22" y2="17" stroke="#ec4899" stroke-width="1.4"/></svg></span>
+      <span class="txt"><span class="fa-t">FieldAssist</span> <span class="pr-t">PRISM</span></span>
+    </div>
+    <div class="navpill"><a href="index.html">Upload</a><a class="active" href="analysis.html">Analysis</a><a href="recommendation.html">Recommendation</a></div>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <canvas id="synth"></canvas>
+      <div class="reveal"><span class="status"><span class="tick">✓</span> Analysis complete</span></div>
+      <h1 class="reveal">Your report, <span class="spec">refracted</span>.</h1>
+      <p class="sub reveal">PRISM read every outlet, split the light, and computed the full impact picture -
+        exact numbers, every segment, ready below.</p>
+    </div>
+
+    <div class="split">
+      <div class="sticky reveal">
+        <div class="eyebrow">What PRISM found</div>
+        <h2>Booked outlets clearly beat the ones that ignored the recommendation.</h2>
+        <p>Control-adjusted figures - booked outlets measured against comparable non-booking outlets, so
+          market swings are netted out. The engine works where it's actioned; the real gap is adoption.</p>
+      </div>
+      <div class="stack">
+        <div class="icard reveal"><div class="k">LPC lift (booked vs not)</div><div class="v up" id="v-lpc">+36.6%</div><div class="d">Lines per call grew far ahead of the non-booking control group.</div></div>
+        <div class="icard reveal"><div class="k">Value lift</div><div class="v up" id="v-value">+64%</div><div class="d">Gross value uplift attributable to actioning recommendations.</div></div>
+        <div class="icard reveal"><div class="k">Estimated PR-attributable value</div><div class="v b" id="v-inc">₹14.5 Cr</div><div class="d">Booked base value × value-lift versus the control.</div></div>
+        <div class="icard reveal"><div class="k">Compliance · headroom</div><div class="v" id="v-comp">3.4%</div><div class="d">Only a small share of recommendations are booked today - the upside sits here.</div></div>
+      </div>
+    </div>
+
+    <div class="bezel reveal" style="margin-top:78px">
+      <div class="glass">
+        <div class="badge">The detailed analysis</div>
+        <h3>Your full analysis, one download away.</h3>
+        <p>A multi-sheet workbook - impact, lift and conversion across every segment, tag-wise
+          contribution and headroom, plus trend, rankings and data-quality - each figure computed
+          exactly from your report.</p>
+        <div class="btnrow">
+          <a class="btn primary" id="dl-analysis" href="../output/PR_Impact_Analysis.xlsx" download>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+            Download full analysis</a>
+          <a class="btn ghost" href="recommendation.html">Build a recommendation →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="inside reveal">
+      <div class="lbl">Inside the file</div>
+      <h2>Eleven views, one refraction.</h2>
+      <div class="tabs">
+        <div class="tab reveal"><div class="n">01</div><div class="t">Overview</div><div class="s">Headline impact, lift, incremental value, data quality.</div></div>
+        <div class="tab reveal"><div class="n">02</div><div class="t">By Region</div><div class="s">Every state - growth, lift, contribution, headroom.</div></div>
+        <div class="tab reveal"><div class="n">03</div><div class="t">Zone / Class / Channel</div><div class="s">Impact across each cut of the business.</div></div>
+        <div class="tab reveal"><div class="n">04</div><div class="t">Tag-wise</div><div class="s">Upsell · Conventional · New · Focussed - conversion & mix.</div></div>
+        <div class="tab reveal"><div class="n">05</div><div class="t">Tag × Segment</div><div class="s">Where each tag converts best and worst.</div></div>
+        <div class="tab reveal"><div class="n">06</div><div class="t">Trend</div><div class="s">Base vs earlier periods; short windows flagged.</div></div>
+        <div class="tab reveal"><div class="n">07</div><div class="t">Rankings</div><div class="s">Best/weakest by lift, value, growth, headroom.</div></div>
+        <div class="tab reveal"><div class="n">08</div><div class="t">Data Quality</div><div class="s">Usable counts - facts, your judgement.</div></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  /* staggered reveals - hero on load, rest on scroll */
+  const io=new IntersectionObserver((es)=>{es.forEach((e)=>{if(e.isIntersecting){
+    const sibs=[...e.target.parentElement.children].filter(x=>x.classList.contains('reveal'));
+    e.target.style.transitionDelay=(Math.max(0,sibs.indexOf(e.target))%6*0.09)+'s';
+    e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  /* pull the REAL headline numbers from the analysis just run (served mode) */
+  if(location.protocol!=='file:'){
+    const sid=(function(){try{let s=localStorage.getItem('prism_sid');return s||'default';}catch(e){return 'default';}})();
+    const dl=document.getElementById('dl-analysis');if(dl)dl.href='/output/'+sid+'/PR_Impact_Analysis.xlsx';
+    fetch('/api/summary?sid='+encodeURIComponent(sid)).then(r=>r.json()).then(d=>{if(!d||!d.ok)return;const s=d.summary;
+      const set=(id,v,plus)=>{const el=document.getElementById(id);
+        if(el&&v&&v!=='-')el.textContent=(plus&&!String(v).startsWith('-')?'+':'')+v;};
+      set('v-lpc',s.lpc_lift,true);set('v-value',s.value_lift,true);
+      set('v-inc',s.incremental,false);set('v-comp',s.compliance,false);
+    }).catch(()=>{});
+  }
+
+  /* Particle Synthesizer - fragments drift then CONVERGE into insight */
+  const cv=document.getElementById('synth'),cx=cv.getContext('2d');
+  let DPR=Math.min(devicePixelRatio||1,2),W,H,P=[],t0=performance.now();
+  function rs(){const r=cv.getBoundingClientRect();W=cv.width=r.width*DPR;H=cv.height=r.height*DPR;}
+  rs();addEventListener('resize',rs);
+  for(let i=0;i<70;i++){const a=Math.random()*6.28,rad=(0.5+Math.random()*0.6);
+    P.push({sx:Math.cos(a)*W*rad,sy:Math.sin(a)*H*rad,
+      tx:(Math.random()-.5)*W*0.5,ty:(Math.random()-.5)*H*0.42,
+      x:0,y:0,c:['#6ea8ff','#8b5cf6','#22d3ee','#f472b6'][i%4],r:(Math.random()*1.6+0.8)*DPR});}
+  function tick(now){cx.clearRect(0,0,W,H);const k=Math.min(1,(now-t0)/2600);const e=1-Math.pow(1-k,3);
+    cx.save();cx.translate(W/2,H/2);
+    for(const p of P){p.x=p.sx+(p.tx-p.sx)*e+Math.sin(now/1400+p.tx)*3*DPR;
+      p.y=p.sy+(p.ty-p.sy)*e+Math.cos(now/1400+p.ty)*3*DPR;
+      cx.beginPath();cx.arc(p.x,p.y,p.r,0,7);cx.fillStyle=p.c;cx.globalAlpha=0.25+e*0.55;
+      cx.shadowColor=p.c;cx.shadowBlur=8*DPR;cx.fill();}
+    cx.restore();requestAnimationFrame(tick);}
+  requestAnimationFrame(tick);
+</script>
+</body>
+</html>

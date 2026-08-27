@@ -1,0 +1,14 @@
+# Render deployment config for PRISM.
+# Render reads this automatically when you connect the repo (Blueprint deploy).
+services:
+  - type: web
+    name: prism
+    runtime: python
+    plan: free                 # bump to "starter" (always-on, more RAM) for the CST rollout
+    buildCommand: pip install -r requirements.txt
+    # one worker keeps memory in check (calamine loads the report in RAM);
+    # threads let it still serve other pages while a report is crunching.
+    startCommand: gunicorn --chdir src app:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 180
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"

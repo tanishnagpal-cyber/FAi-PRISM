@@ -1,0 +1,11 @@
+# --- Python ---
+.venv/
+__pycache__/
+*.pyc
+
+# --- Secrets: NEVER commit the real key ---
+.env
+
+# --- Confidential client data & generated output ---
+data/
+output/
