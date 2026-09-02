@@ -352,7 +352,7 @@
     function goTo(i){ const b=+cards[i].dataset.base; target = -b + Math.round((target+b)/360)*360; kick(); }
 
     function frame(){
-      if(auto && !dragging) target -= 0.16;                  // gentle idle spin
+      if(auto && !dragging) target -= 0.176;                 // gentle idle spin
       angle += (target-angle)*0.10;                          // eased follow
       wheel.style.transform='rotateY('+angle+'deg)';
       let best=0, bestRel=1e9;
