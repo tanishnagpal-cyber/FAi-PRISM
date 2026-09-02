@@ -144,12 +144,15 @@
   .actions .bezel{margin-top:0}
   /* both cards are flex columns and both buttons carry margin-top:auto, so the two
      buttons land on the SAME baseline however unequal the copy above them is */
-  .actions .glass{margin-top:0;height:100%;padding:32px 30px;display:flex;flex-direction:column}
-  .actions .handoff{margin-top:0;height:100%;padding:32px 30px;
+  .actions .glass{margin-top:0;height:100%;padding:28px;display:flex;flex-direction:column}
+  .actions .handoff{margin-top:0;height:100%;padding:28px;
     flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:0}
-  .actions .glass .fmeta{margin-bottom:26px}
+  /* matched type scale across the pair, so neither box reads heavier than the other */
+  .actions .glass h3,.actions .handoff h3{font-size:clamp(19px,2.3vw,23px);margin-top:10px}
+  .actions .glass p,.actions .handoff p{font-size:14px;line-height:1.6;margin-top:10px;max-width:none}
+  .actions .glass .fmeta{margin-top:16px;margin-bottom:20px}
   .actions .glass .btnrow{margin-top:auto;margin-bottom:0}
-  .actions .handoff .hbody{margin-bottom:26px}
+  .actions .handoff .hbody{margin-bottom:20px}
   .actions .handoff .btn{margin-top:auto}
 
   .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s var(--elastic),transform .7s var(--elastic)}
@@ -239,10 +242,10 @@
           carries every segment, tag and ranking behind them.</div>
       </div>
       <div class="stack">
-        <div class="icard reveal"><div class="k">LPC lift (booked vs not)</div><div class="v up" id="v-lpc">+36.6%</div><div class="d">Lines per call grew far ahead of the non-booking control group.</div></div>
-        <div class="icard reveal"><div class="k">Value lift</div><div class="v up" id="v-value">+64%</div><div class="d">Gross value uplift attributable to actioning recommendations.</div></div>
-        <div class="icard reveal"><div class="k">Estimated PR-attributable value</div><div class="v b" id="v-inc">₹14.5 Cr</div><div class="d">Booked base value × value-lift versus the control.</div></div>
-        <div class="icard reveal"><div class="k">Compliance · headroom</div><div class="v" id="v-comp">3.4%</div><div class="d">Only a small share of recommendations are booked today - the upside sits here.</div></div>
+        <div class="icard reveal"><div class="k">LPC lift (booked vs not)</div><div class="v up" id="v-lpc">+36.6%</div><div class="d">LPC is how many different products a shop buys in one visit. Shops that took the recommendation bought this much more than shops that did not.</div></div>
+        <div class="icard reveal"><div class="k">Value lift</div><div class="v up" id="v-value">+64%</div><div class="d">The same comparison, but in money. Shops that took the recommendation spent this much more than shops that did not.</div></div>
+        <div class="icard reveal"><div class="k">Estimated PR-attributable value</div><div class="v b" id="v-inc">₹14.5 Cr</div><div class="d">The extra sales, in rupees, that can be credited to the recommendations.</div></div>
+        <div class="icard reveal"><div class="k">Compliance · headroom</div><div class="v" id="v-comp">3.4%</div><div class="d">Only this much of what was recommended actually got booked. Everything left over is room to grow.</div></div>
       </div>
     </div>
 
@@ -252,9 +255,8 @@
         <div class="glass">
           <div class="badge">Deliverable 1 of 2 · this page</div>
           <h3>The detailed analysis, as an Excel workbook.</h3>
-          <p>This is what this page produces. A multi-sheet workbook carrying impact, lift and
-            conversion across every segment, tag-wise contribution and headroom, plus trend, rankings
-            and data quality - each figure computed exactly from your report.</p>
+          <p>Everything from your report, computed exactly: impact and lift by segment, tag-wise
+            contribution, trend, rankings and data quality.</p>
           <div class="fmeta"><span class="fchip">XLSX</span> PR_Impact_Analysis.xlsx</div>
           <div class="btnrow">
             <a class="btn primary" id="dl-analysis" href="../output/PR_Impact_Analysis.xlsx" download>
