@@ -96,9 +96,9 @@
   .ffline .i{font-weight:700}
   .ffline .p{color:#a78bfa}.ffline .r{color:#60a5ff}.ffline .ii{color:#22d3ee}.ffline .s{color:#2dd4bf}.ffline .m{color:#f472b6}
 
-  /* stage: point-sphere + gravity cards */
+  /* stage: refracting prism + gravity cards */
   .stage{position:relative;height:460px;max-width:1080px;margin:6px auto -40px}
-  #sphere{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:520px;height:460px}
+  #prism{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:760px;height:460px;max-width:100%}
   .gcard{position:absolute;width:186px;padding:15px 16px;border-radius:16px;background:var(--card);
     border:1px solid var(--line);backdrop-filter:blur(12px);box-shadow:0 24px 60px rgba(0,0,0,.55);
     will-change:transform;transition:box-shadow .3s}
@@ -137,7 +137,7 @@
   #toast .spin{width:18px;height:18px;border-radius:50%;border:2px solid rgba(110,168,255,.25);border-top-color:var(--blue2);animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   #toast b{color:#fff}.small{color:var(--muted);font-size:12px}
-  @media(max-width:720px){.gcard{display:none}#sphere{width:360px}}
+  @media(max-width:720px){.gcard{display:none}#prism{width:380px}}
 
   /* ---------- PROCESSING (upload → analysis buffer) ---------- */
   #proc{position:fixed;inset:0;z-index:80;display:none;place-items:center;
@@ -246,7 +246,7 @@
       <div class="ffline"><span class="i p">P</span>roduct · <span class="i r">R</span>ecommendation · <span class="i ii">I</span>mpact · <span class="i s">S</span>ales · <span class="i m">M</span>etrics</div>
 
       <div class="stage">
-        <canvas id="sphere"></canvas>
+        <canvas id="prism"></canvas>
         <div class="gcard c4" data-g="18"><div class="k">Outlets</div><div class="v">1.8L</div></div>
         <div class="gcard c1" data-g="26"><div class="k">LPC Lift</div><div class="v up">+36.6%</div></div>
         <div class="gcard c2" data-g="22"><div class="k">Value Lift</div><div class="v up">+64%</div></div>
@@ -306,43 +306,116 @@
   const timer=setTimeout(reveal,4600);
   document.getElementById('skip').onclick=()=>{clearTimeout(timer);reveal();};
 
-  /* -------- interactive point sphere -------- */
-  const cv=document.getElementById('sphere'), cx=cv.getContext('2d');
-  let W,H,DPR=Math.min(devicePixelRatio||1,2), pts=[], mouse={x:-9999,y:-9999};
+  /* -------- the prism: one white beam in, the spectrum out --------
+     Same projection the point-sphere used (spin about Y, fixed tilt, perspective
+     divide), but driving a triangular prism instead of a cloud. The cursor steers
+     the light rather than shoving points around: it turns the prism and widens the
+     dispersion, which is what actually changes a refraction in the real world. */
+  const cv=document.getElementById('prism'), cx=cv.getContext('2d');
+  let W,H,DPR=Math.min(devicePixelRatio||1,2);
+  const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
   function resize(){const r=cv.getBoundingClientRect();W=cv.width=r.width*DPR;H=cv.height=r.height*DPR;}
-  function build(N){pts=[];const off=2/N,inc=Math.PI*(3-Math.sqrt(5));
-    for(let i=0;i<N;i++){const y=i*off-1+off/2,r=Math.sqrt(1-y*y),phi=i*inc;
-      pts.push({x:Math.cos(phi)*r,y:y,z:Math.sin(phi)*r});}}
-  resize();build(460);addEventListener('resize',resize);
-  cv.addEventListener('pointermove',e=>{const r=cv.getBoundingClientRect();mouse.x=(e.clientX-r.left)*DPR;mouse.y=(e.clientY-r.top)*DPR;});
-  cv.addEventListener('pointerleave',()=>{mouse.x=mouse.y=-9999;});
-  let ang=0;
-  function tick(){
+  resize();addEventListener('resize',resize);
+
+  // equilateral cross-section (apex up), extruded along z
+  const DEP=0.55, TRI=[[0,-0.86],[-0.75,0.43],[0.75,0.43]];   // apex, bottom-left, bottom-right
+  const V=[];                                                  // 0..2 front face, 3..5 back face
+  for(const s of [DEP,-DEP]) for(const t of TRI) V.push({x:t[0],y:t[1],z:s});
+  const EDGES=[[0,1],[1,2],[2,0],[3,4],[4,5],[5,3],[0,3],[1,4],[2,5]];
+  const FACES=[[0,1,2],[5,4,3],[0,1,4,3],[1,2,5,4],[2,0,3,5]]; // front, back, left, bottom, right
+  const IN_FACE=[0,1,4,3], OUT_FACE=[2,0,3,5];                 // where light enters and leaves
+  const SPECTRUM=['#8b5cf6','#6366f1','#3b82f6','#22d3ee','#2dd4bf','#ec4899']; // same order as the intro rays
+
+  let ang=0, mx=0, my=0, tmx=0, tmy=0;
+  cv.addEventListener('pointermove',e=>{const r=cv.getBoundingClientRect();
+    tmx=((e.clientX-r.left)/r.width-0.5)*2; tmy=((e.clientY-r.top)/r.height-0.5)*2;});
+  cv.addEventListener('pointerleave',()=>{tmx=tmy=0;});
+
+  function frame(){
     cx.clearRect(0,0,W,H);
-    ang+=0.0026;
-    const cxp=W/2,cyp=H/2,R=Math.min(W,H)*0.42,sin=Math.sin(ang),cos=Math.cos(ang);
-    const tilt=0.42,st=Math.sin(tilt),ct=Math.cos(tilt);
-    const arr=[];
-    for(const p of pts){
-      let x=p.x*cos - p.z*sin, z=p.x*sin + p.z*cos, y=p.y;
+    if(!REDUCED) ang+=0.0026;                                  // same gentle rate as before
+    mx+=(tmx-mx)*0.06; my+=(tmy-my)*0.06;                      // eased cursor steer
+
+    const cxp=W/2, cyp=H/2, R=Math.min(W,H)*0.30;
+    const a=ang+mx*0.20, cos=Math.cos(a), sin=Math.sin(a);
+    const tilt=0.40+my*0.10, ct=Math.cos(tilt), st=Math.sin(tilt);
+    const P=V.map(p=>{
+      const x=p.x*cos - p.z*sin, z=p.x*sin + p.z*cos, y=p.y;
       const y2=y*ct - z*st, z2=y*st + z*ct;
       const persp=1.9/(1.9 - z2);
-      let sx=cxp + x*R*persp, sy=cyp + y2*R*persp;
-      // cursor gravity (repel)
-      const dx=sx-mouse.x, dy=sy-mouse.y, d2=dx*dx+dy*dy, rad=120*DPR;
-      if(d2 < rad*rad){const d=Math.sqrt(d2)||1,f=(1-d/rad)*26*DPR;sx+=dx/d*f;sy+=dy/d*f;}
-      arr.push({sx,sy,z:z2,persp});
+      return {sx:cxp + x*R*persp, sy:cyp + y2*R*persp, z:z2};
+    });
+    const mid=f=>f.reduce((a,i)=>({x:a.x+P[i].sx/f.length, y:a.y+P[i].sy/f.length}),{x:0,y:0});
+    const inP=mid(IN_FACE), outP=mid(OUT_FACE);
+
+    cx.save(); cx.lineCap='round';
+
+    // 1. the beam arriving - drawn first so the glass body sits over it
+    const bx=inP.x-W*0.55, by=inP.y-H*0.20;
+    const bg=cx.createLinearGradient(bx,by,inP.x,inP.y);
+    bg.addColorStop(0,'rgba(238,242,251,0)'); bg.addColorStop(1,'rgba(238,242,251,.95)');
+    cx.beginPath();cx.moveTo(bx,by);cx.lineTo(inP.x,inP.y);
+    cx.strokeStyle=bg;cx.lineWidth=2.1*DPR;
+    cx.shadowColor='rgba(200,220,255,.9)';cx.shadowBlur=11*DPR;cx.stroke();
+
+    // 2. glass body, painter's algorithm back to front
+    cx.shadowBlur=0;
+    FACES.map(f=>({f,z:f.reduce((s,i)=>s+P[i].z,0)/f.length})).sort((p,q)=>p.z-q.z)
+      .forEach(({f,z})=>{
+        const t=(z+1)/2;
+        cx.beginPath();
+        f.forEach((i,k)=>k?cx.lineTo(P[i].sx,P[i].sy):cx.moveTo(P[i].sx,P[i].sy));
+        cx.closePath();
+        cx.fillStyle=`rgba(150,190,255,${(0.028+t*0.055).toFixed(3)})`;
+        cx.fill();
+      });
+
+    // 3. edges, with the depth cue the sphere used
+    for(const [i,j] of EDGES){
+      const t=((P[i].z+P[j].z)/2+1)/2;
+      cx.beginPath();cx.moveTo(P[i].sx,P[i].sy);cx.lineTo(P[j].sx,P[j].sy);
+      cx.strokeStyle=`rgba(${Math.round(165+t*45)},${Math.round(198+t*40)},255,${(0.22+t*0.55).toFixed(3)})`;
+      cx.lineWidth=(0.7+t*0.9)*DPR;
+      cx.shadowColor='rgba(110,168,255,.85)';cx.shadowBlur=(3+t*7)*DPR;
+      cx.stroke();
     }
-    arr.sort((a,b)=>a.z-b.z);
-    for(const a of arr){
-      const t=(a.z+1)/2; // 0 back .. 1 front
-      const rad=(0.6+t*1.9)*DPR;
-      const col=`rgba(${90+t*40},${150+t*90},${255-t*20},${0.15+t*0.75})`;
-      cx.beginPath();cx.arc(a.sx,a.sy,rad,0,7);cx.fillStyle=col;cx.fill();
+
+    // 4. points riding the edges - keeps the data-cloud texture of the old sphere
+    cx.shadowBlur=0;
+    for(const [i,j] of EDGES){
+      const t=((P[i].z+P[j].z)/2+1)/2, N=11;
+      for(let k=1;k<N;k++){
+        const u=k/N;
+        cx.beginPath();
+        cx.arc(P[i].sx+(P[j].sx-P[i].sx)*u, P[i].sy+(P[j].sy-P[i].sy)*u, (0.5+t*1.1)*DPR, 0, 7);
+        cx.fillStyle=`rgba(${Math.round(140+t*60)},${Math.round(185+t*55)},255,${(0.18+t*0.6).toFixed(3)})`;
+        cx.fill();
+      }
     }
-    requestAnimationFrame(tick);
+
+    // 5. the spectrum leaving - violet bends most, pink least, fading out as it travels
+    const base=0.17, spread=0.56+Math.abs(mx)*0.10, n=SPECTRUM.length;
+    SPECTRUM.forEach((c,k)=>{
+      const th=base+((k/(n-1))-0.5)*spread;
+      const ex=outP.x+Math.cos(th)*W, ey=outP.y+Math.sin(th)*W;
+      const g=cx.createLinearGradient(outP.x,outP.y,ex,ey);
+      g.addColorStop(0,c); g.addColorStop(.55,c); g.addColorStop(1,'rgba(0,0,0,0)');
+      cx.beginPath();cx.moveTo(outP.x,outP.y);cx.lineTo(ex,ey);
+      cx.strokeStyle=g;cx.globalAlpha=.62;cx.lineWidth=2.1*DPR;
+      cx.shadowColor=c;cx.shadowBlur=8*DPR;cx.stroke();
+    });
+
+    cx.restore();
   }
-  tick();
+
+  // only animate while on screen and the tab is visible (the sphere never stopped)
+  let onScreen=true, running=false;
+  function loop(){ frame();
+    if(onScreen && !document.hidden && !REDUCED){ requestAnimationFrame(loop); } else { running=false; } }
+  function kick(){ if(!running){ running=true; requestAnimationFrame(loop); } }
+  new IntersectionObserver(es=>{onScreen=es[0].isIntersecting; if(onScreen) kick();},{threshold:.02}).observe(cv);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) kick(); });
+  if(REDUCED) frame(); else kick();
 
   /* -------- gravity-cursor cards -------- */
   const cards=[...document.querySelectorAll('.gcard')].map(el=>({el,x:0,y:0,tx:0,ty:0}));
