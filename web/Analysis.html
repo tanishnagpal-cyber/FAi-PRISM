@@ -146,13 +146,15 @@
      buttons land on the SAME baseline however unequal the copy above them is */
   .actions .glass{margin-top:0;height:100%;padding:28px;display:flex;flex-direction:column}
   .actions .handoff{margin-top:0;height:100%;padding:28px;
-    flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:0}
+    flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:0;flex-wrap:nowrap}
+  /* .hbody carries flex:1 1 430px for the ROW layout, where 430px is a width.
+     In this column layout that basis becomes a HEIGHT, so it must be reset. */
+  .actions .handoff .hbody{flex:0 0 auto;margin-bottom:20px}
   /* matched type scale across the pair, so neither box reads heavier than the other */
   .actions .glass h3,.actions .handoff h3{font-size:clamp(19px,2.3vw,23px);margin-top:10px}
   .actions .glass p,.actions .handoff p{font-size:14px;line-height:1.6;margin-top:10px;max-width:none}
   .actions .glass .fmeta{margin-top:16px;margin-bottom:20px}
   .actions .glass .btnrow{margin-top:auto;margin-bottom:0}
-  .actions .handoff .hbody{margin-bottom:20px}
   .actions .handoff .btn{margin-top:auto}
 
   .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s var(--elastic),transform .7s var(--elastic)}
